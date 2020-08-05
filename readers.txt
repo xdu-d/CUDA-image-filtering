@@ -1,0 +1,109 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear;clc;
+tic;
+num1 = 3201;
+num2 = 3183;
+num3 = 3201*2;
+num4 = 3183*2;
+%ima=sqrt(-1);
+%index =1;     
+str=('D:\filter1230\polsardata20090501');
+fid=fopen(str, 'r');
+BandNo=16;
+PolSARData=zeros(num1, num2, BandNo);
+tem1=fread(fid,num1*num2*BandNo,'float32','ieee-le');
+fclose(fid);
+xx=reshape(tem1, BandNo*num2, num1);
+xx=xx';
+xx = xx(:,1:BandNo*num2);
+for i=1:16
+    PolSARData_whole(:,:,i)=xx(:,1+(i-1)*num2:i*num2);
+end
+%%%%%%%以上是取出遥感图像文件存到一个三维数组里%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+d1=2^(nextpow2(num1));
+d2=2^(nextpow2(num2));
+d3=2^(nextpow2(num3));
+ddd=zeros(d1,d2);
+ddd(1:num1,1:num2)=PolSARData_whole(:,:,1);
+zzz=zeros(d3,d3);%%%%%%%%%%把前四层取出来
+zzz(1:num1,1:num2)=PolSARData_whole(:,:,1);
+zzz(1:num1,num2+1:num4)=PolSARData_whole(:,:,2);
+zzz(num1+1:num3,1:num2)=PolSARData_whole(:,:,3);
+zzz(num1+1:num3,num2+1:num4)=PolSARData_whole(:,:,4);
+figure;image(zzz(:,:)*700)
+%%%%%%%%%%%%%%%%%%%此处取出来放到了zzz数组里%%%%%%%%%%%%%%%%%%%%%
+%%%%下面是把一层的数据写入了inputimage2文件里%%%%%
+fid2=fopen('C:\Users\LENOVO\Desktop\Cuda编程相关2\Meanfiltering\11\inputimage2','w');
+for i=1:4096
+
+   fwrite(fid2,ddd(i,:),'float');
+
+end
+fclose(fid2);
+figure;image(ddd(:,:)*500)
+
+%figure;image(PolSARData_whole(:,:,1)*500);
+
+%%%%%%%%%%%%%%此处检验写入数据是否与原数据一致%%%%%%%%%%%%%%%
+fid4 = fopen('C:\Users\LENOVO\Desktop\Cuda编程相关2\Meanfiltering\11\inputimage2','r')
+m=1600;
+n=1600;
+C=zeros(m,n);
+for i=1:m
+   C(i,:)=fread(fid4,1600,'float');
+end
+fclose(fid4)
+figure;image(C*500)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%下面想把四层的数据写到inputimage3文件里%%%%%%%%%%%%%%
+fid2=fopen('C:\Users\LENOVO\Desktop\Cuda编程相关2\Meanfiltering\11\inputimage3','w');
+for i=1:8192
+
+   fwrite(fid2,zzz(i,:),'float');
+
+end
+fclose(fid2);
+figure;image(zzz(:,:)*500)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%此处检验写入四层的数据是否与原数据一致%%%%%%%%%%%%%%%
+fid5 = fopen('C:\Users\LENOVO\Desktop\Cuda编程相关2\Meanfiltering\11\inputimage3','r')
+m=d3;
+n=d3;
+C=zeros(m,n);
+for i=1:m
+   C(i,:)=fread(fid5,n,'float');
+end
+fclose(fid5)
+figure;image(C*500)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%把均值滤波后的数据再写入数组显示%%%%%%%%%%%%%%
+fid3 = fopen('C:\Users\LENOVO\Desktop\Cuda编程相关2\Meanfiltering\11\9999.dat','r')
+m=4096;
+n=4096;
+A=zeros(m,n);
+for i=1:m
+   A(i,:)=fread(fid3,4096,'float');
+end
+fclose(fid3)
+figure;image(A*500)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure;image(PolSARData_whole(:,:,1)*700);
+%figure;image(C*500);说明写入的数据和原图像数据一致。
+figure;image(A*500);
+
+%%%%%%%%%%%%%%把均值滤波后的数据再写入数组显示(二层)%%%%%%%%%%%%%%
+fid6 = fopen('C:\Users\LENOVO\Desktop\Cuda编程相关2\Meanfiltering\11\999.dat','r')
+m=4096;
+n=d3;
+A=zeros(m,n);
+for i=1:m
+   A(i,:)=fread(fid6,n,'float');
+end
+fclose(fid6)
+figure;image(A*500)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure;image(PolSARData_whole(:,:,1)*700);
+%figure;image(C*500);说明写入的数据和原图像数据一致。
+figure;image(A*500);
